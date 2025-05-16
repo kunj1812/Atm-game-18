@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game ATM Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f2f2f2; padding: 20px; }
+    .container { max-width: 400px; background: white; padding: 20px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; }
+    .balance { font-size: 24px; text-align: center; margin: 20px 0; }
+    button { width: 100%; padding: 10px; margin: 5px 0; font-size: 16px; }
+    input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; }
+    .history { font-size: 14px; max-height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Player ATM Dashboard</h2>
+    <div id="playerName"></div>
+    <div class="balance" id="balance">Balance: Rs. 0</div>
+    <input type="number" id="amount" placeholder="Enter amount">
+    <button onclick="deposit()">Deposit</button>
+    <button onclick="withdraw()">Withdraw</button>
+    <button onclick="transfer()">Transfer to Player</button>
+    <h3>Transaction History</h3>
+    <div class="history" id="history"></div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const player = urlParams.get('player') || 'guest';
+    document.getElementById('playerName').innerHTML = '<strong>Logged in as:</strong> ' + player;
+
+    if (!localStorage.getItem(player + '_balance')) {
+      localStorage.setItem(player + '_balance', '1500');
+    }
+    if (!localStorage.getItem(player + '_history')) {
+      localStorage.setItem(player + '_history', JSON.stringify([]));
+    }
+
+    let balance = parseInt(localStorage.getItem(player + '_balance'));
+    let history = JSON.parse(localStorage.getItem(player + '_history'));
+
+    function updateBalance() {
+      document.getElementById('balance').innerText = 'Balance: Rs. ' + balance;
+    }
+
+    function logHistory(msg) {
+      history.unshift(msg);
+      if (history.length > 10) history.pop();
+      document.getElementById('history').innerHTML = history.map(e => `<div>${e}</div>`).join('');
+      localStorage.setItem(player + '_history', JSON.stringify(history));
+    }
+
+    function deposit() {
+      const amt = parseInt(document.getElementById('amount').value);
+      if (amt > 0) {
+        balance += amt;
+        updateBalance();
+        localStorage.setItem(player + '_balance', balance);
+        logHistory('Deposited Rs. ' + amt);
+      }
+    }
+
+    function withdraw() {
+      const amt = parseInt(document.getElementById('amount').value);
+      if (amt > 0 && amt <= balance) {
+        balance -= amt;
+        updateBalance();
+        localStorage.setItem(player + '_balance', balance);
+        logHistory('Withdrew Rs. ' + amt);
+      } else {
+        logHistory('Invalid withdraw attempt');
+      }
+    }
+
+    function transfer() {
+      const amt = parseInt(document.getElementById('amount').value);
+      if (amt > 0 && amt <= balance) {
+        balance -= amt;
+        updateBalance();
+        localStorage.setItem(player + '_balance', balance);
+        logHistory('Transferred Rs. ' + amt);
+      } else {
+        logHistory('Invalid transfer attempt');
+      }
+    }
+
+    updateBalance();
+    logHistory('Session started');
+  </script>
+</body>
+</html>
